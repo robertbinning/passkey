@@ -107,8 +107,8 @@ app.get("/users", async (req, res) => {
 })
 
 const options = {
-  key: fs.readFileSync("src/localhost-key.pem"),
-  cert: fs.readFileSync("src/localhost.pem"),
+  key: fs.readFileSync("localhost-key.pem"),
+  cert: fs.readFileSync("localhost.pem"),
 }
 
 https.createServer(options, app).listen(443, () => {
