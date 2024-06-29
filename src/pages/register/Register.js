@@ -1,7 +1,7 @@
 import React from 'react';
-import { createCredential } from './webauthn';
+import { createCredential } from '../../webauthn';
 import './Register.css';
-import logo from './kwaai.png';
+import logo from '../../assets/kwaai.png';
 
 const Register = () => {
     const handleRegister = async () => {
@@ -36,7 +36,8 @@ const Register = () => {
             if (response.ok) {
                 console.log('Registered successfully');
             } else {
-                console.error('Registration failed');
+                const errorText = await response.text();
+                console.error('Registration failed:', errorText);
             }
         } catch (error) {
             console.error('Error creating credential:', error);

@@ -1,7 +1,7 @@
 import React from 'react';
-import { getCredential } from './webauthn';
+import { getCredential } from '../../webauthn';
 import './Login.css';
-import logo from './kwaai.png';
+import logo from '../../assets/kwaai.png';
 
 const Login = () => {
     const handleLogin = async () => {
@@ -31,6 +31,7 @@ const Login = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    email, // Ensure email is included in the request body
                     id: assertion.id,
                     rawId: btoa(String.fromCharCode(...new Uint8Array(assertion.rawId))), // Encode rawId to Base64
                     response: {
@@ -45,6 +46,7 @@ const Login = () => {
 
             if (loginResponse.ok) {
                 console.log('Logged in successfully');
+                window.location.href = '/botsList'; // Redirect to botsList page
             } else {
                 console.error('Login failed');
             }
