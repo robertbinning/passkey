@@ -42,13 +42,8 @@ app.use(session({
   secret: process.env.SESSION_SECRET, // Use the environment variable
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: true } // Set to false if not using HTTPS
+  cookie: { secure: false, httpOnly: true, sameSite: 'strict' } // Adjust for local development
 }))
-
-app.use((req, res, next) => {
-  console.log('Session:', req.session); // Debugging line
-  next();
-});
 
 app.post("/login", async (req, res) => {
   const { email } = req.body;
@@ -67,8 +62,9 @@ app.post("/login", async (req, res) => {
       return res.status(404).send("User not found");
     }
 
+    console.log('Session before setting userId:', req.session); // Debugging statement
     req.session.userId = user.id;
-    console.log('Session after login:', req.session); // Debugging statement
+    console.log('Session after setting userId:', req.session); // Debugging statement
 
     // Debug statement to fetch and log user information
     const userInfo = await prisma.userCredential.findUnique({
@@ -76,7 +72,16 @@ app.post("/login", async (req, res) => {
     });
     console.log('User information after login:', userInfo);
 
-    return res.status(200).json({ user });
+    // Ensure the session is saved before sending the response
+    req.session.save((err) => {
+      if (err) {
+        console.error('Error saving session:', err);
+        return res.status(500).send("Login failed");
+      }
+      console.log('Session saved successfully'); // Debug statement
+      console.log('Saved Session:', req.session); // Print the saved session to the console
+      return res.status(200).json({ user });
+    });
   } catch (error) {
     console.error('Error during login:', error.message, error.stack);
     return res.status(500).send("Login failed");
@@ -84,13 +89,13 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/session", async (req, res) => {
-  console.log('Session check:', req.session); // Debugging statement
+  console.log('Session check:', req.session);
   if (!req.session.userId) {
     return res.status(401).send("No active session");
   }
 
   try {
-    const user = await prisma.userCredential.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: req.session.userId },
     });
 
@@ -160,13 +165,19 @@ app.post("/register", async (req, res) => {
       },
     });
 
+    const userCreate = await prisma.user.create({
+      data: {
+        email: email,
+        id: id,
+      },
+    });
+
     // Debug statement to fetch and log user information
     const user = await prisma.userCredential.findUnique({
       where: { email: email },
     });
     console.log('User information after registration:', user);
-
-    return res.status(201).json({ userCredential });
+    return res.status(201).json({ userCreate });
   } catch (error) {
     console.error('Error during registration:', error.message, error.stack);
     return res.status(500).send("Registration failed");

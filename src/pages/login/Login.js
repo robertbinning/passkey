@@ -42,6 +42,7 @@ const Login = () => {
                     },
                     type: assertion.type,
                 }),
+                credentials: 'include' // Ensure cookies are included in the request
             });
 
             if (loginResponse.ok) {

@@ -23,14 +23,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkSession = async () => {
       try {
+        console.log('Checking session...');
         const response = await axios.get('/session', { withCredentials: true });
         console.log('Session response:', response.data); // Debugging statement
         if (response.data.user) {
+          console.log('User found in session:', response.data.user);
           setCurrentUser(response.data.user);
           setIsAuthenticated(true);
+        } else {
+          console.log('No user found in session response');
         }
       } catch (error) {
-        console.error('No active session found', error);
+        console.error('Error checking session:', error);
       }
     };
     checkSession();
@@ -38,21 +42,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string) => {
     try {
+      console.log('Attempting login with email:', email);
       const response = await axios.post('/api/login', { email }, { withCredentials: true });
+      console.log('Login response:', response.data);
       setCurrentUser(response.data.user);
       setIsAuthenticated(true);
     } catch (error) {
-      console.error('Login failed', error);
+      console.error('Login failed:', error);
     }
   };
 
   const logout = async () => {
     try {
+      console.log('Attempting logout...');
       await axios.post('/api/logout', {}, { withCredentials: true });
+      console.log('Logout successful');
       setIsAuthenticated(false);
       setCurrentUser(null);
     } catch (error) {
-      console.error('Logout failed', error);
+      console.error('Logout failed:', error);
     }
   };
 
