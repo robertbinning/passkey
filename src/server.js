@@ -42,7 +42,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET, // Use the environment variable
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // Set to false if not using HTTPS
+  cookie: { secure: true } // Set to false if not using HTTPS
 }))
 
 app.use((req, res, next) => {
@@ -59,7 +59,7 @@ app.post("/login", async (req, res) => {
   }
 
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.userCredential.findUnique({
       where: { email: email },
     });
 
@@ -69,6 +69,13 @@ app.post("/login", async (req, res) => {
 
     req.session.userId = user.id;
     console.log('Session after login:', req.session); // Debugging statement
+
+    // Debug statement to fetch and log user information
+    const userInfo = await prisma.userCredential.findUnique({
+      where: { email: email },
+    });
+    console.log('User information after login:', userInfo);
+
     return res.status(200).json({ user });
   } catch (error) {
     console.error('Error during login:', error.message, error.stack);
@@ -83,7 +90,7 @@ app.get("/session", async (req, res) => {
   }
 
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.userCredential.findUnique({
       where: { id: req.session.userId },
     });
 
@@ -110,7 +117,7 @@ app.post("/logout", (req, res) => {
 app.get("/getCredentialId", async (req, res) => {
   const { email } = req.query
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.userCredential.findUnique({
       where: { email: email },
     })
 
@@ -126,7 +133,7 @@ app.get("/getCredentialId", async (req, res) => {
 
 app.get("/users", async (req, res) => {
   try {
-    const users = await prisma.user.findMany()
+    const users = await prisma.userCredential.findMany()
     return res.status(200).json({
       users,
     })
@@ -134,6 +141,37 @@ app.get("/users", async (req, res) => {
     return res.status(5050).send("Something went wrong")
   }
 })
+
+app.post("/register", async (req, res) => {
+  const { email, id, rawId, response, type } = req.body;
+
+  if (!email || !id || !rawId || !response || !type) {
+    return res.status(400).send("Missing required fields");
+  }
+
+  try {
+    const userCredential = await prisma.userCredential.create({
+      data: {
+        email: email,
+        id: id,
+        raw_id: rawId,
+        response: response,
+        type: type,
+      },
+    });
+
+    // Debug statement to fetch and log user information
+    const user = await prisma.userCredential.findUnique({
+      where: { email: email },
+    });
+    console.log('User information after registration:', user);
+
+    return res.status(201).json({ userCredential });
+  } catch (error) {
+    console.error('Error during registration:', error.message, error.stack);
+    return res.status(500).send("Registration failed");
+  }
+});
 
 const options = {
   key: fs.readFileSync("localhost-key.pem"),
