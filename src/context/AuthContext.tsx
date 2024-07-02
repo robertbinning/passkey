@@ -40,6 +40,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkSession();
   }, []);
 
+  useEffect(() => {
+    console.log('currentUser state updated:', currentUser);
+    console.log('isAuthenticated state updated:', isAuthenticated);
+  }, [currentUser, isAuthenticated]);
+
   const login = async (email: string) => {
     try {
       console.log('Attempting login with email:', email);
@@ -48,19 +53,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setCurrentUser(response.data.user);
       setIsAuthenticated(true);
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Login failed', error);
     }
   };
 
   const logout = async () => {
     try {
       console.log('Attempting logout...');
-      await axios.post('/api/logout', {}, { withCredentials: true });
+      await axios.post('/logout', {}, { withCredentials: true });
       console.log('Logout successful');
       setIsAuthenticated(false);
       setCurrentUser(null);
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Logout failed', error);
     }
   };
 
